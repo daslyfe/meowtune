@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>MeowTune</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/meow-terminal.css">
+  <link rel="stylesheet" href="app.css">
+  <style id="user-colours"></style>
+</head>
+<body>
+  <main class="app">
+    <section class="pane panel-pane">
+      <header class="panel-head">
+        <nav class="panel-tabs" role="tablist">
+          <button role="tab" class="selected" data-tab="tune" aria-selected="true">TUNE</button><button role="tab" data-tab="settings" aria-selected="false">SETTINGS</button>
+        </nav>
+        <div class="panel-controls">
+          <span class="readout" id="r-in" title="Detected input pitch, after PITCH">IN:---</span>
+          <span class="readout" id="r-hz" title="Detected input frequency">HZ:---</span>
+          <span class="readout" id="r-out" title="The note it is tuned to">OUT:---</span>
+          <span class="indicator idle" id="r-midi" title="Held MIDI notes">MIDI:NONE</span>
+        </div>
+      </header>
+
+      <div class="panel-body">
+        <div class="tune" id="tab-tune">
+          <div class="graph" id="graph-wrap">
+            <canvas id="graph" aria-label="Pitch over time"></canvas>
+            <p class="note graph-status" id="status">&gt; AWAITING SIGNAL<span class="cursor">_</span></p>
+          </div>
+
+          <div class="keys-bar">
+            <div class="field"><span>KEY</span>
+              <div class="picker">
+                <button class="btn" id="key-prev" aria-label="Previous key">[&lt;]</button>
+                <select id="key" aria-label="Key"></select>
+                <button class="btn" id="key-next" aria-label="Next key">[&gt;]</button>
+              </div>
+            </div>
+            <div class="field"><span>SCALE</span>
+              <div class="picker">
+                <button class="btn" id="scale-prev" aria-label="Previous scale">[&lt;]</button>
+                <select id="scale" aria-label="Scale"></select>
+                <button class="btn" id="scale-next" aria-label="Next scale">[&gt;]</button>
+              </div>
+            </div>
+            <button class="btn" id="all-notes">&gt;&gt;ALL</button>
+            <button class="btn" id="no-notes">&gt;&gt;NONE</button>
+            <span class="readout" id="r-notes">NOTES:12</span>
+          </div>
+
+          <div class="keys" id="keys-wrap">
+            <canvas id="keys" aria-label="Notes in the scale. Click a key to add or remove its note in every octave; drag to paint."></canvas>
+          </div>
+
+          <div class="controls">
+            <div class="col">
+              <section class="section">
+                <h3>// TUNE</h3>
+                <div class="field" data-param="amount" data-decimals="0"><span>AMOUNT %</span>
+                  <div class="slider"><input type="range" aria-label="Amount %"><input type="number" aria-label="Amount %"></div>
+                </div>
+                <div class="field" data-param="glide" data-decimals="0"><span>GLIDE MS</span>
+                  <div class="slider"><input type="range" aria-label="Glide ms"><input type="number" aria-label="Glide ms"></div>
+                </div>
+                <div class="field" data-param="pitch" data-decimals="2"><span>PITCH ST</span>
+                  <div class="slider"><input type="range" aria-label="Pitch semitones"><input type="number" aria-label="Pitch semitones"></div>
+                </div>
+                <div class="field"><span>MIDI</span>
+                  <div class="choice" role="radiogroup" aria-label="MIDI mode" id="midi-mode">
+                    <button role="radio" aria-checked="true" class="selected" data-value="0" title="Held notes replace the scale">SNAP</button><button role="radio" aria-checked="false" data-value="1" title="Every held note sings">CHORD</button>
+                  </div>
+                </div>
+              </section>
+            </div>
+            <div class="col">
+              <section class="section">
+                <h3>// FORMANT</h3>
+                <div class="field" data-param="formantCorrect" data-decimals="0"><span>CORRECT %</span>
+                  <div class="slider"><input type="range" aria-label="Formant correction %"><input type="number" aria-label="Formant correction %"></div>
+                </div>
+                <div class="field" data-param="formantShift" data-decimals="2"><span>SHIFT ST</span>
+                  <div class="slider"><input type="range" aria-label="Formant shift semitones"><input type="number" aria-label="Formant shift semitones"></div>
+                </div>
+              </section>
+              <section class="section">
+                <h3>// VOICE</h3>
+                <div class="field"><span>RANGE</span>
+                  <div class="picker">
+                    <button class="btn" id="range-prev" aria-label="Previous range">[&lt;]</button>
+                    <select id="range" aria-label="Range" title="The lowest note it tracks. Higher ranges have less latency."></select>
+                    <button class="btn" id="range-next" aria-label="Next range">[&gt;]</button>
+                  </div>
+                </div>
+                <div class="kv"><span>LATENCY</span><span id="r-latency">-</span></div>
+              </section>
+            </div>
+            <div class="col">
+              <section class="section">
+                <h3>// UNISON</h3>
+                <div class="field" data-param="unison" data-decimals="0"><span>VOICES</span>
+                  <div class="slider"><input type="range" aria-label="Unison voices"><input type="number" aria-label="Unison voices"></div>
+                </div>
+                <div class="field" data-param="detune" data-decimals="1"><span>DETUNE CT</span>
+                  <div class="slider"><input type="range" aria-label="Detune cents"><input type="number" aria-label="Detune cents"></div>
+                </div>
+                <div class="field" data-param="spread" data-decimals="0"><span>SPREAD %</span>
+                  <div class="slider"><input type="range" aria-label="Stereo spread %"><input type="number" aria-label="Stereo spread %"></div>
+                </div>
+              </section>
+            </div>
+            <div class="col">
+              <section class="section">
+                <h3>// OUTPUT</h3>
+                <div class="field" data-param="mix" data-decimals="0"><span>MIX %</span>
+                  <div class="slider"><input type="range" aria-label="Mix %"><input type="number" aria-label="Mix %"></div>
+                </div>
+                <div class="field" data-param="output" data-decimals="1"><span>OUTPUT DB</span>
+                  <div class="slider"><input type="range" aria-label="Output dB"><input type="number" aria-label="Output dB"></div>
+                </div>
+                <div class="kv meter"><span>IN</span><span id="m-in"></span></div>
+                <div class="kv meter"><span>OUT</span><span id="m-out"></span></div>
+              </section>
+            </div>
+          </div>
+        </div>
+
+        <div class="scroll" id="tab-settings" hidden>
+          <section class="section">
+            <h3>// COLOURS</h3>
+            <label class="field"><span>BACKGROUND</span><input type="color" data-colour="bg" value="#000000"></label>
+            <label class="field"><span>TEXT</span><input type="color" data-colour="text" value="#ffffff"></label>
+            <label class="field"><span>ACCENT</span><input type="color" data-colour="accent" value="#118ac1"></label>
+            <label class="field"><span>MUTED</span><input type="color" data-colour="muted" value="#76787e"></label>
+            <label class="field"><span>BORDER</span><input type="color" data-colour="border" value="#525252"></label>
+            <div class="row"><button class="btn" id="reset-colours">&gt;&gt;RESET COLOURS</button></div>
+            <p class="note">COLOURS ARE SHARED BY EVERY MEOWTUNE ON THIS MAC.</p>
+          </section>
+          <section class="section">
+            <h3>// MIDI</h3>
+            <p class="note">SNAP: HELD NOTES REPLACE THE SCALE WHILE THEY ARE HELD, IN ANY OCTAVE.</p>
+            <p class="note">CHORD: EVERY HELD NOTE SINGS AT ITS OWN PITCH, UP TO 8 AT ONCE. WITH NO NOTES HELD IT TUNES TO THE SCALE.</p>
+            <p class="note">ABLETON LIVE: ON A MIDI TRACK SET MIDI TO: THE VOCAL TRACK, THEN MEOWTUNE.</p>
+            <p class="note">KEY AND SCALE ARE HOST PARAMETERS: AUTOMATE THEM OR MAP THEM TO A MIDI CC IN THE HOST, LIKE THE SLIDERS. CUSTOM IS THE NOTES CLICKED ON THE KEYBOARD.</p>
+          </section>
+          <section class="section">
+            <h3>// INFO</h3>
+            <div class="kv"><span>SAMPLE RATE</span><span id="i-rate">-</span></div>
+            <div class="kv"><span>LATENCY</span><span id="i-latency">-</span></div>
+            <div class="kv"><span>VERSION</span><span id="i-version">-</span></div>
+            <p class="note">THE INPUT IS SUMMED TO MONO. LATENCY IS REPORTED TO THE HOST, SO DELAY COMPENSATION KEEPS THE TRACK IN TIME.</p>
+            <p class="note">RANGE SETS THE LOWEST NOTE IT TRACKS: BASS 70 HZ, TENOR 100 HZ, ALTO 150 HZ, SOPRANO 220 HZ. A HIGHER RANGE HAS LESS LATENCY; NOTES BELOW IT ARE NOT TUNED.</p>
+            <p class="note">DOUBLE-CLICK A SLIDER TRACK TO RESET IT. FONT: IBM 3270, BSD-3.</p>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
